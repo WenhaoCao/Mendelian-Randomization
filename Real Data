@@ -1,0 +1,129 @@
+Mendelian Randomization Project
+
+Real Data
+Convert VCF files to bfiles
+VCF.slurm
+#!/bin/bash -l
+#SBATCH --time=10:00:00
+#SBATCH --ntasks=22
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10g
+#SBATCH --tmp=10g
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=cao00094@umn.edu
+CD ~/MRdata/NewLD
+
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr1.dose.vcf.gz  --make-bed --out ~/MRdata/NewData/chr1 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr2.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr2 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr3.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr3 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr4.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr4 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr5.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr5 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr6.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr6 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr7.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr7 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr8.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr8 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr9.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr9 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr10.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr10 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr11.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr11 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr12.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr12 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr13.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr13 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr14.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr14 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr15.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr15 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr16.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr16 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr17.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr17 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr18.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr18 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr19.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr19 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr20.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr20 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr21.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr21 &
+~/data/plink --vcf /home/vrie0006/shared/MCTFR/TOPMed_imputed/chr22.dose.vcf.gz --make-bed --out ~/MRdata/NewData/chr22 &
+wait
+
+Extract Independent Subjects:
+for i in {1..22};do nohup ~/data/plink --bfile ukb_cal_chr${i}_v2 --keep ~/MRdata/ukb/indID.txt --make-bed --out ~/MRdata/ukb/keep${i}.AB & done
+
+Run QC for the selected samples
+QC.slurm:
+#!/bin/bash -l
+#SBATCH --time=10:00:00
+#SBATCH --ntasks=22
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10g
+#SBATCH --tmp=10g
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=cao00094@umn.edu
+CD ~/MRdata
+
+~/data/plink --bfile ~/MRdata/NewData/keep1.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep1.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep2.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep2.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep3.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep3.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep4.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep4.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep5.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep5.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep6.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep6.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep7.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep7.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep8.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep8.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep9.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep9.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep10.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep10.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep11.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep11.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep12.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep12.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep13.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep13.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep14.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep14.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep15.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep15.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep16.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep16.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep17.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep17.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep18.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep18.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep19.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep19.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep20.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep20.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep21.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep21.Pruned &
+~/data/plink --bfile ~/MRdata/NewData/keep22.ind  --geno 0.05 --hwe 0.000001 --maf 0.01  --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/LD01/keep22.Pruned &
+wait
+
+
+Extract LD:
+for i in {1..22};do nohup ~/data/plink --bfile ~/MRdata/ukb/LD01/keep${i}.Pruned --extract ~/MRdata/ukb/LD01/keep${i}.Pruned.prune.in --make-bed --out ~/MRdata/ukb/LD01/keep${i}.LD_extracted & done
+
+for i in {1..22};do nohup ~/data/plink --bfile ~/MRdata/LD01/keep${i}.LD_extracted --genome --min 0.2 --make-bed --out ~/MRdata/LD01/keep${i}.LD_extracted02 & done
+
+
+
+Use GCTA to Make GRM with All SNPs:
+for i in {1..22};do nohup ~/data/gcta --bfile ~/MRdata/ukb/LD01/keep${i}.LD_extracted --autosome --make-grm  --out ~/MRdata/ukb/LD01/${i}grmCPDLD & done
+## Combine GRMs together
+~/data/gcta --mgrm allchr.txt --make-grm --out allkeepCPDLD
+## Select unrelated SNPs in GRM matrix
+~/data/gcta --grm allkeepCPDLD  --grm-cutoff 0.05  --make-grm --out allkeepCPDLD0.05
+
+Run HE regression to calculate the heritability
+~/data/gcta --HEreg --grm 37k_0319  --pheno BMI.pheno  --out HE37KBMI
+~/data/gcta --HEreg-bivar 1 2 --grm 37k_0319  --pheno BMI.pheno  --out HE37KBMISBP
+
+~/data/gcta --grm /panfs/roc/groups/9/saonli/shared/bb/dosage_data3/316k_unrelated_566k --grm-cutoff 0.1 --make-grm  --thread-num 50 --out 316k/GRM/316k_0_25_pruned 
+
+
+
+Select Top Significant SNPs from references to run MR:
+for i in {1..22};do nohup ~/data/plink --bfile ~/MRdata/NewLD//QCLDpruned/keep${i}.LD_extracted_ind --extract ~/MRdata/cpdSNP05.txt --range --make-bed --out ~/MRdata/NewLD/Top05/Select${i}CPDLD & done
+
+~/data/plink --merge-list mergelist.txt --make-bed --out allSNP
+for i in {1..22};do nohup ~/data/gcta --bfile ~/MRdata/NewLD/Top005/Select${i}CPDLD --autosome --make-grm  --out ~/MRdata/NewLD/Top005/${i}grmCPDLD & done
+~/data/gcta --mgrm allchr.txt --make-grm --out allkeepCPDLD
+## Calculate the summary statistics in target population
+~/data/gcta --bfile all.txt  --fastGWA-lr  --pheno DPW.txt --thread-num 10 --out fastGWADPW
+
+~/data/gcta --mbfile allSNP.txt  --fastGWA-lr  --pheno CPD.txt --thread-num 10 --out fastGWACPD
+
+~/data/gcta --mlma  --mbfile allCDP.txt --mgrm allchr.txt --pheno CPD.txt --out test --thread-num 10
+
+
+~/data/gcta --mbfile allCDP.txt --make-grm --sparse-cutoff 0.05 --thread-num 10 --out sp_grm
+
+# To run a fastGWA analysis based on the sparse GRM generated above
+~/data/gcta --mbfile allCDP.txt --grm-sparse sp_grm --fastGWA-mlm --phenoCPD.txt  --thread-num 10 --out CPDeffect
+
+
+
+
+
+
+
+
+
+
