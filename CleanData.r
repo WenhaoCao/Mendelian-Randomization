@@ -1,4 +1,4 @@
-setwd("D:/MR_Analysis/NewData/UKB")
+
 library(readxl)
 library(genio)
 library(matlib)
