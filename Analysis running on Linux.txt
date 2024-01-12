@@ -1,0 +1,51 @@
+Data Analysis for estimating causal effect of BMI on SBP among Black British People
+Working path: /panfs/jay/groups/16/saonli/cao00094
+
+## Extract black british people
+for i in {1..22};do nohup ~/data/plink --bfile ukb_cal_chr${i}_v2 --keep ~/MRdata/ukb/BlackBriID.txt --make-bed --out ~/MRdata/ukb/keep${i}.AB & done
+
+## QC with LD pruning
+for i in {1..22};do nohup ~/data/plink --bfile ~/MRdata/LD01/keep${i}.ind  --geno 0.05 --hwe 0.000001 --maf 0.01 --range --indep-pairwise 1000 50 0.1  --make-bed --out ~/MRdata/ukb/LD01/keep1.Pruned &
+
+## Extract QC files
+for i in {1..22};do nohup ~/data/plink --bfile ~/MRdata/ukb/LD01/keep${i}.Pruned --extract ~/MRdata/ukb/LD01/keep${i}.Pruned.prune.in --make-bed --out ~/MRdata/ukb/LD01/keep${i}.LD_extracted & done
+
+## Calculate GRM matrix
+for i in {1..22};do nohup ~/data/gcta --bfile ~/MRdata/ukb/LD01/keep${i}.LD_extracted --autosome --make-grm  --out ~/MRdata/ukb/LD01/${i}grmLD & done
+
+## Combine 22 GRM matrix to one, then the result can be used for TS-RE method
+~/data/gcta --mgrm ~/MRdata/ukb/LD01/allchr.txt --make-grm --out ~/MRdata/ukb/LD01/allLD
+
+## Set cutoff for GRM matrix
+~/data/gcta --grm ~/MRdata/ukb/LD01/allLD  --grm-cutoff 0.05  --make-grm --out ~/MRdata/ukb/LD01/allLD0.05
+
+
+## Running HE regression to calculate heritablity
+~/data/gcta --HEreg --grm ~/MRdata/ukb/LD01/allLD0.05  --pheno ~/MRdata/ukb/SBP.txt  --out ~/MRdata/ukb/LD01/HE_SBP_0.05
+~/data/gcta --HEreg --grm ~/MRdata/ukb/LD01/allLD0.05  --pheno ~/MRdata/ukb/BMI.txt  --out ~/MRdata/ukb/LD01/HE_BMI_0.05
+~/data/gcta --HEreg-bivar 1 2 --grm ~/MRdata/ukb/LD01/allLD0.05  --pheno ~/MRdata/ukb/BMISBP.txt  --out ~/MRdata/ukb/LD01/HE_BMISBP_0.05
+
+
+
+###### Running with pre selection by using sigificant SNPs for BMI 
+###  Top 97 significant SNPs
+/panfs/jay/groups/16/saonli/cao00094/MRdata/ukb/top97/BMI97.txt
+
+
+###  Significant SNPs with cut-off p-value < 0.00005  
+## Extract the top SNPs
+for i in {1..22};do nohup ~/data/plink --bfile ~/MRdata/ukb/keep${i}.AB --extract ~/MRdata/ukb/BMI00005.txt --make-bed --out ~/MRdata/ukb/sig00005/keep${i}.BMISig & done
+
+## Calculate the GRM matrix
+for i in {1..22};do nohup ~/data/gcta --bfile ~/MRdata/ukb/sig00005/keep${i}.BMISig --autosome --make-grm  --out ~/MRdata/ukb/sig00005/${i}grmCPDLDInd & done
+## Combine GRM matrix to one, then the result can be used for TS-RE method
+~/data/gcta --mgrm ~/MRdata/ukb/LD01/allchr.txt --make-grm --out ~/MRdata/ukb/sig00005/allkeepLD
+
+## HE regression
+~/data/gcta --HEreg --grm ~/MRdata/ukb/sig00005/allkeepCPDLD  --pheno ~/MRdata/ukb/SBP.txt  --out ~/MRdata/ukb/sig00005//HE_SBP
+~/data/gcta --HEreg --grm ~/MRdata/ukb/sig00005/allkeepCPDLD --pheno ~/MRdata/ukb/BMI.txt  --out ~/MRdata/ukb/sig00005//HE_BMI
+~/data/gcta --HEreg-bivar 1 2 --grm ~/MRdata/ukb/sig00005/allkeepCPDLDInd  --pheno ~/MRdata/ukb/BMISBP.txt  --out 
+
+## Running GWAS to calculate summary statistics for other MR methods
+~/data/gcta --mbfile ~/MRdata/ukb/top97/all.txt  --fastGWA-lr  --pheno ~/MRdata/ukb/BMI.txt --thread-num 10 --out ~/MRdata/ukb/top97/fastGWABMI97
+~/data/gcta --mbfile ~/MRdata/ukb/sig00005/all.txt  --fastGWA-lr  --pheno ~/MRdata/ukb/BMI.txt --thread-num 10 --out ~/MRdata/ukb/sig00005/fastGWABMIsig00005
